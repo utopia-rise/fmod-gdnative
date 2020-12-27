@@ -12,42 +12,48 @@ namespace godot{
 
     private:
         enum PointType{
-            INVALID = 0,
+            UNMANAGED = 0,
             CANVAS = 1,
             SPATIAL = 2
         };
 
         Object* obj = nullptr;
-        uint64_t id = 0;
-        PointType type = INVALID;
+        PointType type = UNMANAGED;
 
     public:
+        explicit PointObject(Object* object) {
+            type = UNMANAGED;
 
-        PointObject(Object* object) {
-            PointType type = INVALID;
+            if (!object) {
+                Godot::print("Object is null");
+                return;
+            }
 
-            this->id = object->get_instance_id();
+            uint64_t id = object->get_instance_id();
             if(id == 0) {
+                Godot::print("Object id is 0");
                 return;
             }
 
             obj = object;
             if(Object::cast_to<CanvasItem>(object)) {
+                Godot::print("Object id is CANVAS");
                 type = CANVAS;
             }
             else if(Object::cast_to<Spatial>(object)) {
+                Godot::print("Object id is SPATIAL");
                 type = SPATIAL;
             }
         }
+        PointObject() : PointObject(nullptr) {};
 
         ~PointObject() = default;
 
         inline bool isValid() const {
-            uint64_t current_id = obj->get_instance_id();
-            if(current_id != id) {
-                return false;
+            if(type == UNMANAGED) {
+                return true;
             }
-            return type != INVALID;
+            return godot::core_1_1_api->godot_is_instance_valid(obj);
         }
 
         inline CanvasItem* getCanvasItem() const{
@@ -58,7 +64,7 @@ namespace godot{
         }
 
         inline Object* getObject() const{
-            if(type == INVALID) {
+            if(type == UNMANAGED) {
                 return nullptr;
             }
             return obj;
@@ -68,7 +74,7 @@ namespace godot{
             if(type != SPATIAL) {
                 return nullptr;
             }
-            return Object::cast_to<CanvasItem>(obj);
+            return Object::cast_to<Spatial>(obj);
         }
     };
 }

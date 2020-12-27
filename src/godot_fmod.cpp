@@ -192,25 +192,23 @@ void Fmod::_process(float delta) {
         if (eventInstance) {
             EventInfo *eventInfo = getEventInfo(eventInstance);
             if (eventInfo) {
-                if (eventInfo->gameObj) {
-                    if (eventInfo->gameObj.isValid()) {
-                        FMOD_STUDIO_STOP_MODE m = FMOD_STUDIO_STOP_IMMEDIATE;
-                        ERROR_CHECK(eventInstance->stop(m));
+                if (!eventInfo->gameObj.isValid()) {
+                    FMOD_STUDIO_STOP_MODE m = FMOD_STUDIO_STOP_IMMEDIATE;
+                    ERROR_CHECK(eventInstance->stop(m));
+                    releaseOneEvent(eventInstance);
+                    i--;
+                    continue;
+                }
+                if (eventInfo->isOneShot) {
+                    FMOD_STUDIO_PLAYBACK_STATE s;
+                    ERROR_CHECK(eventInstance->getPlaybackState(&s));
+                    if (s == FMOD_STUDIO_PLAYBACK_STOPPED) {
                         releaseOneEvent(eventInstance);
                         i--;
                         continue;
                     }
-                    if (eventInfo->isOneShot) {
-                        FMOD_STUDIO_PLAYBACK_STATE s;
-                        ERROR_CHECK(eventInstance->getPlaybackState(&s));
-                        if (s == FMOD_STUDIO_PLAYBACK_STOPPED) {
-                            releaseOneEvent(eventInstance);
-                            i--;
-                            continue;
-                        }
-                    }
-                    updateInstance3DAttributes(eventInstance, eventInfo->gameObj.getObject());
                 }
+                updateInstance3DAttributes(eventInstance, eventInfo->gameObj.getObject());
             } else {
                 GODOT_LOG(2, "A managed event doesn't have an EventInfoStructure")
             }
@@ -392,8 +390,8 @@ void Fmod::setListenerNumber(int p_listenerNumber) {
 
 void Fmod::addListener(int index, Object *gameObj) {
     auto point = PointObject(gameObj);
-    if(!point.isValid()) {
-        GODOT_LOG(2, "Object is not a valid CanvasItem or Spatial.");
+    if(!point.getObject()) {
+        GODOT_LOG(2, "Object is not a valid CanvasItem or Spatial.")
         return;
     }
 
@@ -404,7 +402,7 @@ void Fmod::addListener(int index, Object *gameObj) {
         int count = 0;
         for (int i = 0; i < systemListenerNumber; i++) {
             auto listener = &listeners[i];
-            if (listener->gameObj.type != nullptr) count++;
+            if (listener->gameObj.getObject()) count++;
         }
         actualListenerNumber = count;
         if (actualListenerNumber > 0) listenerWarning = true;
@@ -421,7 +419,7 @@ void Fmod::removeListener(int index) {
         int count = 0;
         for (int i = 0; i < systemListenerNumber; i++) {
             auto listener = &listeners[i];
-            if (listener->gameObj.obj != nullptr) count++;
+            if (listener->gameObj.getObject()) count++;
         }
         actualListenerNumber = count;
         if (actualListenerNumber > 0) listenerWarning = true;
@@ -524,7 +522,7 @@ Object *Fmod::getObjectAttachedToListener(int index) {
         GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
         return nullptr;
     } else {
-        Object *object = listeners[index].gameObj.obj;
+        Object *object = listeners[index].gameObj.getObject();
         if (!object) {
             GODOT_LOG(1, "No object was set on listener")
         }
@@ -613,7 +611,7 @@ int Fmod::getBankVCACount(String pathToBank) {
 const uint64_t Fmod::createEventInstance(String eventPath) {
     FMOD::Studio::EventInstance *instance = createInstance(eventPath, false, nullptr);
     if (instance) {
-        return (uint64_t) instance;
+        return reinterpret_cast<uint64_t>(instance);
     }
     return 0;
 }
@@ -1189,8 +1187,9 @@ FMOD::Studio::EventInstance *Fmod::createInstance(const String eventName, const 
     FMOD::Studio::EventInstance *eventInstance = nullptr;
     ERROR_CHECK(instance->createInstance(&eventInstance));
     auto point = PointObject(gameObject);
-    if (eventInstance && (!isOneShot || point.isValid())) {
+    if (eventInstance && (!isOneShot || point.getObject())) {
         auto *eventInfo = new EventInfo();
+        GODOT_LOG(0, eventName)
         eventInfo->gameObj = point;
         eventInfo->isOneShot = isOneShot;
         eventInstance->setUserData(eventInfo);
@@ -1206,13 +1205,12 @@ EventInfo *Fmod::getEventInfo(FMOD::Studio::EventInstance *eventInstance) {
 }
 
 void Fmod::playOneShot(const String eventName, Object *gameObj) {
-    auto point = PointObject(gameObj);
     FMOD::Studio::EventInstance *instance = createInstance(eventName, true, nullptr);
     if (instance) {
         // set 3D attributes once
 
-        if (point.isValid()) {
-            updateInstance3DAttributes(instance, point);
+        if (gameObj) {
+            updateInstance3DAttributes(instance, gameObj);
         }
         ERROR_CHECK(instance->start());
         ERROR_CHECK(instance->release());
@@ -1220,12 +1218,11 @@ void Fmod::playOneShot(const String eventName, Object *gameObj) {
 }
 
 void Fmod::playOneShotWithParams(const String eventName, Object *gameObj, const Dictionary parameters) {
-    FMOD::Studio::EventInstance *instance = createInstance(eventName, true, nullptr);
+    FMOD::Studio::EventInstance* instance = createInstance(eventName, true, nullptr);
     if (instance) {
         // set 3D attributes once
-        auto point = PointObject(gameObj);
-        if (point.isValid()) {
-            updateInstance3DAttributes(instance, point);
+        if (gameObj) {
+            updateInstance3DAttributes(instance, gameObj);
         }
         // set the initial parameter values
         auto keys = parameters.keys();
@@ -1237,11 +1234,12 @@ void Fmod::playOneShotWithParams(const String eventName, Object *gameObj, const 
         ERROR_CHECK(instance->start());
         ERROR_CHECK(instance->release());
     }
+}
 
 void Fmod::playOneShotAttached(const String eventName, Object *gameObj) {
     auto point = PointObject(gameObj);
-    if (point.isValid()) {
-        FMOD::Studio::EventInstance *instance = createInstance(eventName, true, point);
+    if (point.getObject()) {
+        FMOD::Studio::EventInstance *instance = createInstance(eventName, true, point.getObject());
         if (instance) {
             ERROR_CHECK(instance->start());
         }
@@ -1250,8 +1248,8 @@ void Fmod::playOneShotAttached(const String eventName, Object *gameObj) {
 
 void Fmod::playOneShotAttachedWithParams(const String eventName, Object *gameObj, const Dictionary parameters) {
     auto point = PointObject(gameObj);
-    if (point.isValid()) {
-        FMOD::Studio::EventInstance *instance = createInstance(eventName, true, point);
+    if (point.getObject()) {
+        FMOD::Studio::EventInstance *instance = createInstance(eventName, true, point.getObject());
         if (instance) {
             // set the initial parameter values
             auto keys = parameters.keys();
@@ -1267,7 +1265,7 @@ void Fmod::playOneShotAttachedWithParams(const String eventName, Object *gameObj
 
 void Fmod::attachInstanceToNode(const uint64_t instanceId, Object *gameObj) {
     auto point = PointObject(gameObj);
-    if (point.isValid()) {
+    if (!point.getObject()) {
         GODOT_LOG(1, "Trying to attach event instance to null game object")
         return;
     }
@@ -1277,7 +1275,7 @@ void Fmod::attachInstanceToNode(const uint64_t instanceId, Object *gameObj) {
 
 void Fmod::detachInstanceFromNode(const uint64_t instanceId) {
     FIND_AND_CHECK(instanceId, events)
-    getEventInfo(instance)->gameObj = nullptr;
+    getEventInfo(instance)->gameObj = PointObject();
 }
 
 Object *Fmod::getObjectAttachedToInstance(uint64_t instanceId) {
@@ -1285,7 +1283,7 @@ Object *Fmod::getObjectAttachedToInstance(uint64_t instanceId) {
     FIND_AND_CHECK(instanceId, events, object)
     EventInfo *eventInfo = getEventInfo(instance);
     if (eventInfo) {
-        object = eventInfo->gameObj;
+        object = eventInfo->gameObj.getObject();
         if (!object) {
             GODOT_LOG(1, "There is no object attached to event instance.")
         }

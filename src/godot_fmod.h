@@ -73,7 +73,7 @@ namespace godot {
         //Is the event oneshot
         bool isOneShot = false;
         //GameObject to which this event is attached
-        PointObject gameObj;
+        PointObject gameObj = PointObject(nullptr);
         // Callback info associated with this event
         Callbacks::CallbackInfo callbackInfo = Callbacks::CallbackInfo();
     };
