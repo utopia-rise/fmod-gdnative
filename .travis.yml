@@ -40,7 +40,7 @@ before_install:
   - if [[ "$PLATFORM" == "android" ]]; then sh fmod-gdnative/.travis/download-ndk.sh; fi
   - mkdir libs && cd libs
   - mkdir fmod && cd fmod
-  - wget https://gist.githubusercontent.com/piiertho/b2521d95965297422888b113dbb3aa5a/raw/e8b5097c36efff34940011ccbcb3fd414fc11074/getFmod2.sh
+  - wget https://gist.githubusercontent.com/piiertho/b2521d95965297422888b113dbb3aa5a/raw/97532757bc85e3976fb61d0103d4d245e5b4f041/getFmod2.sh
   - chmod +x getFmod2.sh
   - ./getFmod2.sh $FMODUSER $FMODPASS $PLATFORM
   - if [[ "$PLATFORM" == "linux" ]]; then tar -xvf fmodstudioapi20002linux.tar.gz; fi
