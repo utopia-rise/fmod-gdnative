@@ -15,6 +15,7 @@
 #include "helpers/containers.h"
 #include "helpers/constants.h"
 #include "helpers/current_function.h"
+#include "helpers/point_object.h"
 
 
 #ifdef __ANDROID__
@@ -65,13 +66,14 @@ namespace godot {
         String message = "FMOD Sound System: type maximum size is " + String::num(maxSize) + " but the bank contains " + String::num(actualSize) + " entries";\
         GODOT_LOG(2, message)\
         actualSize = maxSize;\
-    }\
+    }                                         \
+
 
     struct EventInfo {
         //Is the event oneshot
         bool isOneShot = false;
         //GameObject to which this event is attached
-        Object *gameObj = nullptr;
+        PointObject gameObj;
         // Callback info associated with this event
         Callbacks::CallbackInfo callbackInfo = Callbacks::CallbackInfo();
     };
@@ -82,7 +84,7 @@ namespace godot {
     };
 
     struct Listener {
-        Object *gameObj = nullptr;
+        PointObject gameObj;
         bool listenerLock = false;
         float weight = 1.0;
     };
@@ -132,7 +134,6 @@ namespace godot {
         Dictionary getTransformInfoFrom3DAttribut(FMOD_3D_ATTRIBUTES &attribut);
         Dictionary getTransform2DInfoFrom3DAttribut(FMOD_3D_ATTRIBUTES &attribut);
 
-        bool isNull(Object *o);
         void updateInstance3DAttributes(FMOD::Studio::EventInstance *instance, Object *o);
         void runCallbacks();
 
