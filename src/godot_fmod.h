@@ -11,6 +11,7 @@
 #include <Object.hpp>
 #include <CanvasItem.hpp>
 #include <Node.hpp>
+#include <OS.hpp>
 #include <gen/Mutex.hpp>
 #include "callback/event_callbacks.h"
 #include "callback/file_callbacks.h"
@@ -44,7 +45,9 @@ namespace godot {
 #define GODOT_LOG(level, message)\
     switch (level) {\
         case 0:\
-            Godot::print(message);\
+            if (verboseMode || OS::get_singleton()->is_stdout_verbose()){\
+                Godot::print(message);\
+            }\
             break;\
         case 1:\
             Godot::print_warning(message, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__);\
@@ -308,6 +311,10 @@ namespace godot {
         Array getGlobalParameterDescList();
 
         void setCallback(uint64_t instanceId, int callbackMask);
+
+        static bool verboseMode;
+        void setVerboseMode(bool value);
+        bool getVerboseMode();
     };
 }
 

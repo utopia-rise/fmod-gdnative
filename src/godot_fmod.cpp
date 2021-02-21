@@ -6,6 +6,8 @@
 
 using namespace godot;
 
+bool Fmod::verboseMode = true;
+
 Fmod::Fmod() = default;
 
 Fmod::~Fmod() {
@@ -139,12 +141,22 @@ void Fmod::_register_methods() {
     register_method("get_global_parameter_desc_list", &Fmod::getGlobalParameterDescList);
     register_method("_process", &Fmod::_process);
 
+    register_property<Fmod, bool>("verbose_mode", &Fmod::setVerboseMode, &Fmod::getVerboseMode, false);
+
     register_signal<Fmod>("timeline_beat", "params", GODOT_VARIANT_TYPE_DICTIONARY);
     register_signal<Fmod>("timeline_marker", "params", GODOT_VARIANT_TYPE_DICTIONARY);
     register_signal<Fmod>("sound_played", "params", GODOT_VARIANT_TYPE_DICTIONARY);
     register_signal<Fmod>("sound_stopped", "params", GODOT_VARIANT_TYPE_DICTIONARY);
 
     REGISTER_ALL_CONSTANTS
+}
+
+void Fmod::setVerboseMode(bool value) {
+    verboseMode = value;
+}
+
+bool Fmod::getVerboseMode() {
+    return verboseMode;
 }
 
 bool Fmod::checkErrors(FMOD_RESULT result, const char *function, const char *file, int line) {

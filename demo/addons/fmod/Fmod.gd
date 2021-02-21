@@ -120,12 +120,13 @@ var started := false
 ############
 func _init() -> void:
 	godot_fmod = FmodNative.new()
+	godot_fmod.verbose_mode = verbose_mode
 	godot_fmod.connect("timeline_beat", self, "on_timeline_beat")
 	godot_fmod.connect("timeline_marker", self, "on_timeline_marker")
 	godot_fmod.connect("sound_played", self, "on_sound_played")
 	godot_fmod.connect("sound_stopped", self, "on_sound_stopped")
 	print("Fmod Gdnative interface managed by a GDScript wrapper")
-	
+
 func _notification(what):
 	if what == NOTIFICATION_PREDELETE:
 		if started:
@@ -541,7 +542,16 @@ func set_bus_volume(bus_path: String, volume: float) -> void:
 	
 func stop_all_bus_events(bus_path: String, stopMode: int) -> void:
 	godot_fmod.stop_all_bus_events(bus_path, stopMode)
-	
+
+#########
+###Variable###
+#########
+var verbose_mode : bool setget set_verbose_mode
+func set_verbose_mode(value : bool):
+	verbose_mode = value
+	if started:
+		godot_fmod.verbose_mode = verbose_mode
+
 #########
 ###Signal###
 #########
