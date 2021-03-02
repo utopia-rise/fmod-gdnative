@@ -1,5 +1,6 @@
 #include "file_callbacks.h"
 #include <OS.hpp>
+#include "../helpers/macro.h"
 
 namespace Callbacks{
 
@@ -14,13 +15,16 @@ namespace Callbacks{
             //lock so we can't add and remove elements from the queue at the same time.
             std::lock_guard<std::mutex> lk(read_mut);
             requests.push_front_value(request);
+            GODOT_LOG(0, "Read lock Queue Request")
         }
         else{
             //lock so we can't add and remove elements from the queue at the same time.
             std::lock_guard<std::mutex> lk(read_mut);
             requests.push_back_value(request);
+            GODOT_LOG(0, "Read lock Queue Request")
         }
         read_cv.notify_one();
+        GODOT_LOG(0, "Read Notification")
     }
 
     void GodotFileRunner::cancelReadRequest(FMOD_ASYNCREADINFO* request) {
@@ -28,13 +32,16 @@ namespace Callbacks{
         {
             std::lock_guard<std::mutex> lk(read_mut);
             requests.erase(request);
+            GODOT_LOG(0, "Read Lock Cancel Request")
         }
 
         //We lock and check if the current request is the one being canceled.
         //In this case, we wait until it's done.
         {
             std::unique_lock<std::mutex> lk(cancel_mut);
+            GODOT_LOG(0, "Cancel Lock Cancel Request")
             if(request == current_request){
+                GODOT_LOG(0, "Waiting for cancel notification")
                 cancel_cv.wait(lk);
             }
         }
@@ -47,6 +54,7 @@ namespace Callbacks{
             {
                 std::unique_lock<std::mutex> lk(read_mut);
                 read_cv.wait(lk, [this]{return !requests.empty() || stop;});
+                GODOT_LOG(0, "Waiting for read notification")
             }
 
             while(!requests.empty()) {
@@ -54,6 +62,7 @@ namespace Callbacks{
                 //also store the current request so it cannot be cancel during process.
                 {
                     std::lock_guard<std::mutex> lk(read_mut);
+                    GODOT_LOG(0, "Read lock Run2")
                     current_request = requests.pop_front_value();
                 }
 
@@ -86,9 +95,11 @@ namespace Callbacks{
                 //Request no longer processed
                 {
                     std::lock_guard<std::mutex> lk(cancel_mut);
+                    GODOT_LOG(0, "Cancel Lock Run")
                     current_request = nullptr;
                 }
                 cancel_cv.notify_one();
+                GODOT_LOG(0, "Cancel Notification")
             }
         }
     }
