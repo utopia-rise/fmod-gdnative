@@ -195,7 +195,9 @@ void Fmod::_process(float delta) {
     }
 
     //Check if bank are loaded, load buses, vca and event descriptions.
+    GODOT_LOG(0, "Checking banks!")
     checkLoadingBanks();
+    GODOT_LOG(0, "Done Checking the banks!")
 
     for (int i = 0; i < events.size(); i++) {
         FMOD::Studio::EventInstance *eventInstance = events.get(i);
