@@ -55,6 +55,8 @@ namespace Callbacks{
             //waiting for the container to have one request
             {
                 std::unique_lock<std::mutex> lk(read_mut);
+                godot::String message = "Read Request in store: " + godot::String::num(requests.size());
+                GODOT_LOG(0, message)
                 GODOT_LOG(0, "Waiting for read notification")
                 read_cv.wait(lk, [this]{return !requests.empty() || stop;});
             }
