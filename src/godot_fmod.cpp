@@ -164,9 +164,9 @@ void Fmod::init(int numOfChannels, const unsigned int studioFlag, const unsigned
 
     if (ERROR_CHECK(system->initialize(numOfChannels, studioFlag, flag, nullptr))) {
         isInitialized = true;
-        GODOT_LOG(0, "FMOD Sound System: Successfully initialized")
+        GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: Successfully initialized")
         if (studioFlag == FMOD_STUDIO_INIT_LIVEUPDATE) {
-            GODOT_LOG(0, "FMOD Sound System: Live update enabled!")
+            GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: Live update enabled!")
         }
     }
 
@@ -180,7 +180,7 @@ void Fmod::init(int numOfChannels, const unsigned int studioFlag, const unsigned
             &Callbacks::godotSyncCancel,
             -1)
     )) {
-        GODOT_LOG(0, "Custom File System enabled.")
+        GODOT_LOG(LogLevel::INFO, "Custom File System enabled.")
     }
 #endif
 }
@@ -188,7 +188,7 @@ void Fmod::init(int numOfChannels, const unsigned int studioFlag, const unsigned
 void Fmod::_process(float delta) {
     if (!isInitialized) {
         if (!isNotinitPrinted) {
-            GODOT_LOG(2, "FMOD Sound System: Fmod should be initialized before calling update")
+            GODOT_LOG(LogLevel::ERROR, "FMOD Sound System: Fmod should be initialized before calling update")
             isNotinitPrinted = true;
         }
         return;
@@ -222,7 +222,7 @@ void Fmod::_process(float delta) {
                     updateInstance3DAttributes(eventInstance, eventInfo->gameObj);
                 }
             } else {
-                GODOT_LOG(2, "A managed event doesn't have an EventInfoStructure")
+                GODOT_LOG(LogLevel::ERROR, "A managed event doesn't have an EventInfoStructure")
             }
         }
     }
@@ -259,7 +259,7 @@ void Fmod::checkLoadingBanks() {
         } else if (*loading_state == FMOD_STUDIO_LOADING_STATE_ERROR) {
             bank->unload();
             delete loadingBank;
-            GODOT_LOG(2, "Fmod Sound System: Error loading bank.")
+            GODOT_LOG(LogLevel::ERROR, "Fmod Sound System: Error loading bank.")
         }
     }
 }
@@ -267,7 +267,7 @@ void Fmod::checkLoadingBanks() {
 void Fmod::setListenerAttributes() {
     if (actualListenerNumber == 0) {
         if (listenerWarning) {
-            GODOT_LOG(1, "FMOD Sound System: No listeners are set!")
+            GODOT_LOG(LogLevel::WARN, "FMOD Sound System: No listeners are set!")
             listenerWarning = false;
         }
         return;
@@ -379,11 +379,11 @@ bool Fmod::isFmodValid(Node *node) {
     if (node) {
         bool ret = Node::cast_to<Spatial>(node) || Node::cast_to<CanvasItem>(node);
         if(!ret) {
-            GODOT_LOG(2, "Invalid Object. A listener has to be either a Spatial or CanvasItem.")
+            GODOT_LOG(LogLevel::ERROR, "Invalid Object. A listener has to be either a Spatial or CanvasItem.")
         }
         return ret;
     }
-    GODOT_LOG(2, "Object is null")
+    GODOT_LOG(LogLevel::ERROR, "Object is null")
     return false;
 }
 
@@ -410,7 +410,7 @@ void Fmod::shutdown() {
     ERROR_CHECK(system->release());
     system = nullptr;
     coreSystem = nullptr;
-    GODOT_LOG(0, "FMOD Sound System: System released")
+    GODOT_LOG(LogLevel::INFO, "FMOD Sound System: System released")
 
 }
 
@@ -420,7 +420,7 @@ void Fmod::setListenerNumber(int p_listenerNumber) {
             systemListenerNumber = p_listenerNumber;
         }
     } else {
-        GODOT_LOG(2, "Number of listeners must be set between 1 and 8")
+        GODOT_LOG(LogLevel::ERROR, "Number of listeners must be set between 1 and 8")
     }
 }
 
@@ -440,7 +440,7 @@ void Fmod::addListener(int index, Node *gameObj) {
         actualListenerNumber = count;
         if (actualListenerNumber > 0) listenerWarning = true;
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
     }
 }
 
@@ -457,7 +457,7 @@ void Fmod::removeListener(int index) {
         actualListenerNumber = count;
         if (actualListenerNumber > 0) listenerWarning = true;
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
     }
 }
 
@@ -472,7 +472,7 @@ float Fmod::getSystemListenerWeight(const int index) {
         listeners[index].weight = weight;
         return weight;
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
         return 0;
     }
 
@@ -483,7 +483,7 @@ void Fmod::setSystemListenerWeight(const int index, float weight) {
         listeners[index].weight = weight;
         ERROR_CHECK(system->setListenerWeight(index, weight));
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
     }
 }
 
@@ -495,7 +495,7 @@ Dictionary Fmod::getSystemListener3DAttributes(const int index) {
         ERROR_CHECK(system->getListenerAttributes(index, &attr));
         _3Dattr = getTransformInfoFrom3DAttribut(attr);
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
     }
     return _3Dattr;
 }
@@ -508,7 +508,7 @@ Dictionary Fmod::getSystemListener2DAttributes(int index) {
         ERROR_CHECK(system->getListenerAttributes(index, &attr));
         _2Dattr = getTransform2DInfoFrom3DAttribut(attr);
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
     }
     return _2Dattr;
 }
@@ -519,7 +519,7 @@ void Fmod::setSystemListener3DAttributes(int index, Transform transform) {
                 attr = get3DAttributesFromTransform(transform);
         ERROR_CHECK(system->setListenerAttributes(index, &attr));
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
     }
 }
 
@@ -529,7 +529,7 @@ void Fmod::setSystemListener2DAttributes(int index, Transform2D transform) {
                 attr = get3DAttributesFromTransform2D(transform);
         ERROR_CHECK(system->setListenerAttributes(index, &attr));
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
     }
 }
 
@@ -537,7 +537,7 @@ void Fmod::setListenerLock(int index, bool isLocked) {
     if (index >= 0 && index < systemListenerNumber) {
         listeners[index].listenerLock = isLocked;
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
     }
 }
 
@@ -545,19 +545,19 @@ bool Fmod::getListenerLock(int index) {
     if (index >= 0 && index < systemListenerNumber) {
         return listeners[index].listenerLock;
     } else {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
         return false;
     }
 }
 
 Node * Fmod::getObjectAttachedToListener(int index) {
     if (index < 0 || index >= systemListenerNumber) {
-        GODOT_LOG(2, "index of listeners must be set between 0 and the number of listeners set")
+        GODOT_LOG(LogLevel::ERROR, "index of listeners must be set between 0 and the number of listeners set")
         return nullptr;
     } else {
         Node *node = listeners[index].gameObj;
         if (!node) {
-            GODOT_LOG(1, "No node was set on listener")
+            GODOT_LOG(LogLevel::WARN, "No node was set on listener")
         }
         return node;
     }
@@ -577,7 +577,7 @@ String Fmod::loadBank(String pathToBank, const unsigned int flag) {
     FMOD::Studio::Bank *bank = nullptr;
     ERROR_CHECK(system->loadBankFile(pathToBank.alloc_c_string(), flag, &bank));
     if (bank) {
-        GODOT_LOG(0, "FMOD Sound System: LOADING BANK " + String(pathToBank))
+        GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: LOADING BANK " + String(pathToBank))
         auto *loadingBank = new LoadingBank();
         loadingBank->bank = bank;
         loadingBank->godotPath = pathToBank;
@@ -597,7 +597,7 @@ void Fmod::unloadBank(String pathToBank) {
     unloadAllVCAs(instance);
     unloadAllEventDescriptions(instance);
     ERROR_CHECK(instance->unload());
-    GODOT_LOG(0, "FMOD Sound System: BANK " + String(pathToBank) + " UNLOADED")
+    GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: BANK " + String(pathToBank) + " UNLOADED")
     banks.erase(pathToBank);
 }
 
@@ -1095,14 +1095,14 @@ void Fmod::loadBankData(LoadingBank *loadingBank) {
     auto bank = loadingBank->bank;
     FMOD_RESULT result = bank->getPath(path, MAX_PATH_SIZE, nullptr);
     if (result == FMOD_OK) {
-        GODOT_LOG(0, "FMOD Sound System: BANK " + String(path) + " LOADED")
+        GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: BANK " + String(path) + " LOADED")
         loadAllBuses(bank);
         loadAllVCAs(bank);
         loadAllEventDescriptions(bank);
         banks[loadingBank->godotPath] << bank;
     } else {
         if (result == FMOD_ERR_EVENT_NOTFOUND) {
-            GODOT_LOG(0, "FMOD Sound System: BANK " + String(path) +
+            GODOT_LOG(LogLevel::INFO, "FMOD Sound System: BANK " + String(path) +
                          " COULDN'T BE LOADED. Path incorrect or MasterBank not loaded yet.")
         } else {
             ERROR_CHECK(result);
@@ -1120,7 +1120,7 @@ void Fmod::loadAllVCAs(FMOD::Studio::Bank *bank) {
             auto vca = array[i];
             char path[MAX_PATH_SIZE];
             ERROR_CHECK(vca->getPath(path, MAX_PATH_SIZE, nullptr));
-            GODOT_LOG(0, "FMOD Sound System: " + String(path) + " added to VCAs")
+            GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: " + String(path) + " added to VCAs")
             VCAs[path] << vca;
         }
     }
@@ -1135,7 +1135,7 @@ void Fmod::loadAllBuses(FMOD::Studio::Bank *bank) {
             auto bus = array[i];
             char path[MAX_PATH_SIZE];
             ERROR_CHECK(bus->getPath(path, MAX_PATH_SIZE, nullptr));
-            GODOT_LOG(0, "FMOD Sound System: " + String(path) + " added to buses")
+            GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: " + String(path) + " added to buses")
             buses[path] << bus;
         }
     }
@@ -1150,7 +1150,7 @@ void Fmod::loadAllEventDescriptions(FMOD::Studio::Bank *bank) {
             auto eventDescription = array[i];
             char path[MAX_PATH_SIZE];
             ERROR_CHECK(eventDescription->getPath(path, MAX_PATH_SIZE, nullptr));
-            GODOT_LOG(0, "FMOD Sound System: " + String(path) + " added to eventDescriptions")
+            GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: " + String(path) + " added to eventDescriptions")
             eventDescriptions[path] << eventDescription;
         }
     }
@@ -1165,7 +1165,7 @@ void Fmod::unloadAllVCAs(FMOD::Studio::Bank *bank) {
             auto vca = array[i];
             char path[MAX_PATH_SIZE];
             ERROR_CHECK(vca->getPath(path, MAX_PATH_SIZE, nullptr));
-            GODOT_LOG(0, "FMOD Sound System: " + String(path) + " removed from VCAs")
+            GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: " + String(path) + " removed from VCAs")
             VCAs.erase(path);
         }
     }
@@ -1180,7 +1180,7 @@ void Fmod::unloadAllBuses(FMOD::Studio::Bank *bank) {
             auto bus = array[i];
             char path[MAX_PATH_SIZE];
             ERROR_CHECK(bus->getPath(path, MAX_PATH_SIZE, nullptr));
-            GODOT_LOG(0, "FMOD Sound System: " + String(path) + " removed from buses")
+            GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: " + String(path) + " removed from buses")
             buses.erase(path);
         }
     }
@@ -1195,7 +1195,7 @@ void Fmod::unloadAllEventDescriptions(FMOD::Studio::Bank *bank) {
             auto eventDescription = array[i];
             char path[MAX_PATH_SIZE];
             ERROR_CHECK(eventDescription->getPath(path, MAX_PATH_SIZE, nullptr));
-            GODOT_LOG(0, "FMOD Sound System: " + String(path) + " removed from eventDescriptions")
+            GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: " + String(path) + " removed from eventDescriptions")
             eventDescriptions.erase(path);
         }
     }
@@ -1291,7 +1291,7 @@ void Fmod::playOneShotAttachedWithParams(String eventName, Node *gameObj, Dictio
 
 void Fmod::attachInstanceToNode(uint64_t instanceId, Node *gameObj) {
     if (!isFmodValid(gameObj)) {
-        GODOT_LOG(1, "Trying to attach event instance to null game object or object is not Spatial or CanvasItem")
+        GODOT_LOG(LogLevel::WARN, "Trying to attach event instance to null game object or object is not Spatial or CanvasItem")
         return;
     }
     FIND_AND_CHECK(instanceId, events)
@@ -1310,7 +1310,7 @@ Node * Fmod::getObjectAttachedToInstance(uint64_t instanceId) {
     if (eventInfo) {
         node = eventInfo->gameObj;
         if (!node) {
-            GODOT_LOG(1, "There is no node attached to event instance.")
+            GODOT_LOG(LogLevel::WARN, "There is no node attached to event instance.")
         }
     }
     return node;
@@ -1477,9 +1477,9 @@ void Fmod::setSoundPitch(const uint64_t instanceId, float pitch) {
 void Fmod::setSound3DSettings(float dopplerScale, float distanceFactor, float rollOffScale) {
     if (distanceFactor > 0 && ERROR_CHECK(coreSystem->set3DSettings(dopplerScale, distanceFactor, rollOffScale))) {
         distanceScale = distanceFactor;
-        GODOT_LOG(0, "FMOD Sound System: Successfully set global 3D settings")
+        GODOT_LOG(LogLevel::DEBUG, "FMOD Sound System: Successfully set global 3D settings")
     } else {
-        GODOT_LOG(2, "FMOD Sound System: Failed to set 3D settings :|")
+        GODOT_LOG(LogLevel::ERROR, "FMOD Sound System: Failed to set 3D settings :|")
     }
 }
 
@@ -1570,7 +1570,7 @@ float Fmod::getGlobalParameterByName(String parameterName) {
 
 void Fmod::setGlobalParameterByID(const Array idPair, const float value) {
     if (idPair.size() != 2) {
-        GODOT_LOG(2, "FMOD Sound System: Invalid parameter ID");
+        GODOT_LOG(LogLevel::ERROR, "FMOD Sound System: Invalid parameter ID");
         return;
     }
     FMOD_STUDIO_PARAMETER_ID id;
@@ -1581,7 +1581,7 @@ void Fmod::setGlobalParameterByID(const Array idPair, const float value) {
 
 float Fmod::getGlobalParameterByID(const Array idPair) {
     if (idPair.size() != 2) {
-        GODOT_LOG(2, "FMOD Sound System: Invalid parameter ID");
+        GODOT_LOG(LogLevel::ERROR, "FMOD Sound System: Invalid parameter ID");
         return -1.f;
     }
     FMOD_STUDIO_PARAMETER_ID id;
@@ -1610,7 +1610,7 @@ Dictionary Fmod::getGlobalParameterDescByName(const String parameterName) {
 
 Dictionary Fmod::getGlobalParameterDescByID(const Array idPair) {
     if (idPair.size() != 2) {
-        GODOT_LOG(2, "FMOD Sound System: Invalid parameter ID");
+        GODOT_LOG(LogLevel::ERROR, "FMOD Sound System: Invalid parameter ID");
         return Dictionary();
     }
     Dictionary paramDesc;
@@ -1660,7 +1660,7 @@ Array Fmod::getGlobalParameterDescList() {
 void Fmod::setCallback(const uint64_t instanceId, int callbackMask) {
     FIND_AND_CHECK(instanceId, events)
     ERROR_CHECK(instance->setCallback(Callbacks::eventCallback, callbackMask));
-    GODOT_LOG(0, String("CallBack set on event ") + String::num(instanceId, 0))
+    GODOT_LOG(LogLevel::DEBUG, String("CallBack set on event ") + String::num(instanceId, 0))
 }
 
 
@@ -1694,7 +1694,7 @@ void Fmod::runCallbacks() {
                 cbInfo->soundSignalEmitted = true;
             }
         } else {
-            GODOT_LOG(2, "A managed event doesn't have an EventInfoStructure")
+            GODOT_LOG(LogLevel::ERROR, "A managed event doesn't have an EventInfoStructure")
         }
     }
 }
